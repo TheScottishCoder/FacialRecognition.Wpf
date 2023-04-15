@@ -1,7 +1,9 @@
 ﻿using Emgu.CV;
 using Emgu.CV.Structure;
+using FacialRecognition.Handlers;
 using FacialRecognition.Helper;
 using FacialRecognition.Model;
+using FacialRecognition.Wrappers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -88,6 +90,7 @@ namespace FacialRecognition.ViewModel
         // Box row and column
         private int _column;
         private int _row;
+        private static int counter = 0;
 
         public AddFaceViewModel()
         {
@@ -159,10 +162,10 @@ namespace FacialRecognition.ViewModel
         {
             if (_canCapture)
             {
-                ImageSource img = ProcessImage(CaptureFrame());
+                Image<Gray, Byte> img = ProcessImage(CaptureFrame());
                 Images.Add(new Model.Image
                 {
-                    Source = img
+                    Face = img
                 });
             }
         }
@@ -175,7 +178,8 @@ namespace FacialRecognition.ViewModel
         private void AddPerson()
         {
             PersonStorage.Instance.AddPerson(new Person(
-                GenerateRandomID(),
+                //GenerateRandomID(),
+                counter++,
                 this.Name,
                 this.Images.ToList(),
                 this.Group,
@@ -213,11 +217,11 @@ namespace FacialRecognition.ViewModel
             VideoCaptureWrapper.Instance.Stop();
         }
 
-        private ImageSource ProcessImage(BitmapImage img)
+        private Image<Gray, byte> ProcessImage(BitmapImage img)
         {
-            var processedImage = ImageHandler.HaarCascadeFaceExtract(img);
+            var processedImage = HaarCascadeHandler.HaarCascadeFaceExtract(img);
 
-            return processedImage.ToBitmapSource();
+            return processedImage;
         }
     }
 }

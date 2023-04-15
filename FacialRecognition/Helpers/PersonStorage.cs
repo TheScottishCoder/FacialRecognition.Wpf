@@ -1,9 +1,12 @@
-﻿using FacialRecognition.Model;
+﻿using Emgu.CV;
+using Emgu.CV.Structure;
+using FacialRecognition.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace FacialRecognition.Helper
 {
@@ -30,5 +33,20 @@ namespace FacialRecognition.Helper
 
         public void RemovePerson(Person person) =>
             _people.Remove(person);
+
+        public List<Image<Gray, Byte>> GetImages()
+        {
+            List<Image<Gray, Byte>> sources = new List<Image<Gray, Byte>>();
+
+            foreach(var p in _people)
+            {
+                foreach(var f in p.Images)
+                {
+                    sources.Add(f.Face);
+                }
+            }
+
+            return sources;
+        }
     }
 }

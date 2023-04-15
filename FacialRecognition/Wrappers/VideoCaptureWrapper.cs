@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FacialRecognition.Helper
+namespace FacialRecognition.Wrappers
 {
     public class VideoCaptureWrapper
     {
