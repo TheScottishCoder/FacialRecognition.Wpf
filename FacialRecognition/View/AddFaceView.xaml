@@ -1,0 +1,53 @@
+<UserControl x:Class="FacialRecognition.View.AddFaceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:FacialRecognition.View"
+             mc:Ignorable="d" 
+             d:DesignHeight="820" d:DesignWidth="1600">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Camera -->
+        <Grid Grid.Column="0">
+            <Border BorderBrush="#74B9FF" BorderThickness="2" Margin="0 0 0 150" Width="640" Height="480">
+                <Viewbox Height="480" Width="640" Stretch="Uniform">
+                    <Image Source="{Binding CameraSource}"/>
+                </Viewbox>
+            </Border>
+        </Grid>
+        <Button Command="{Binding EnableCameraCommand}" FontSize="32" Content="Enable Camera" Margin="0 650 350 0" Width="224" Height="64" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
+        <Button Command="{Binding TakeImageCommand}" FontSize="32" Content="Take Image" Margin="350 650 0 0" Width="224" Height="64" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
+
+        <!-- Taken Image Collection -->
+        <Grid Grid.Column="1">
+            <ItemsControl ItemsSource="{Binding Images}" Margin="0 0 0 500" Width="300" Height="200">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="2" Columns="3"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Image Source="{Binding Source}"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>         
+            </ItemsControl>
+
+            <!-- Elements -->
+            <Border Grid.ColumnSpan="3" Grid.RowSpan="2" BorderBrush="#74B9FF" BorderThickness="2"/>
+
+            <TextBox Text="{Binding Name}" FontSize="32" Margin="0 0 0 64" Width="384" Height="64" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
+            <TextBox Text="{Binding Group}" FontSize="32" Margin="0 128 0 0" Width="384" Height="64" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
+            <TextBox Text="{Binding Timeout, Mode=TwoWay}" FontSize="32" Margin="0 320 0 0" Width="384" Height="64" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
+
+            <Button Command="{Binding ClearImagesCommand}" FontSize="32" Content="Clear Images" Margin="0 650 350 0" Width="224" Height="64" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
+            <Button Command="{Binding AddPersonCommand}" FontSize="32" Content="Add Person" Margin="350 650 0 0" Width="224" Height="64" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
+        </Grid>
+    </Grid>
+</UserControl>
