@@ -16,6 +16,7 @@
         <DockPanel Grid.Row="0" LastChildFill="False" Background="#424242" VerticalAlignment="Stretch">
             <Button Command="{Binding ShowDetectFaceViewCommand}" FontSize="28" Content="Detect Face" Margin="16, 8, 16, 8" Width="192" Height="64" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
             <Button Command="{Binding ShowAddFaceViewCommand}" FontSize="28" Content="Add Face" Margin="16, 8, 16, 8" Width="192" Height="64" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
+            <Button Command="{Binding ShowFaceListViewCommand}" FontSize="28" Content="Face List" Margin="16, 8, 16, 8" Width="192" Height="64" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
         </DockPanel>
         
         <!-- Wrap user controls to toggle visibility -->
@@ -25,6 +26,10 @@
 
         <Grid Grid.Row="1" Visibility="{Binding DetectFaceWrapperVisibility}">
             <View:DetectFaceView/>
+        </Grid>
+
+        <Grid Grid.Row="1" Visibility="{Binding FaceListWrapperVisibility}">
+            <View:FaceListView/>
         </Grid>
     </Grid>
 </UserControl>

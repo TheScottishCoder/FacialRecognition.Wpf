@@ -15,6 +15,7 @@ namespace FacialRecognition.ViewModel
         // Relay Commands
         public RelayCommand ShowAddFaceViewCommand { get; }
         public RelayCommand ShowDetectFaceViewCommand { get; }
+        public RelayCommand ShowFaceListViewCommand { get; }
 
         // Property Changed Event Handler
         public event PropertyChangedEventHandler PropertyChanged;
@@ -43,10 +44,22 @@ namespace FacialRecognition.ViewModel
             }
         }
 
+        private Visibility _faceListWrapperVisibility;
+        public Visibility FaceListWrapperVisibility
+        {
+            get => _faceListWrapperVisibility;
+            set
+            {
+                _faceListWrapperVisibility = value;
+                OnPropertyChanged(nameof(FaceListWrapperVisibility));
+            }
+        }
+
         public MenuBarViewModel()
         {
             ShowAddFaceViewCommand = new RelayCommand(ShowAddFaceView);
             ShowDetectFaceViewCommand = new RelayCommand(ShowDetectFaceView);
+            ShowFaceListViewCommand = new RelayCommand(ShowFaceListView);
 
             CollapseAll();
         }
@@ -55,6 +68,7 @@ namespace FacialRecognition.ViewModel
         {
             AddFaceWrapperVisibility = Visibility.Collapsed;
             DetectFaceWrapperVisibility = Visibility.Collapsed;
+            FaceListWrapperVisibility = Visibility.Collapsed;
         }
 
         private void ShowAddFaceView()
@@ -69,6 +83,13 @@ namespace FacialRecognition.ViewModel
             CollapseAll();
             //DetectFaceViewModel.VisibilityUpdate.Invoke(this, null);
             DetectFaceWrapperVisibility = Visibility.Visible;
+        }
+        
+        private void ShowFaceListView()
+        {
+            CollapseAll();
+            //DetectFaceViewModel.VisibilityUpdate.Invoke(this, null);
+            FaceListWrapperVisibility = Visibility.Visible;
         }
     }
 }

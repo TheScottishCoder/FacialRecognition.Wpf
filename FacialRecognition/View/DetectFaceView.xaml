@@ -21,12 +21,25 @@
             </Border>
         </Grid>
 
+        <!-- Detail elements -->
         <Grid Grid.Column="1" Margin="0 26 26 26">
             <Border Grid.ColumnSpan="3" Grid.RowSpan="2" BorderBrush="#74B9FF" BorderThickness="2"/>
-            <Image Source="{Binding ExtractedFace}" Margin="0 0 0 0" Width="100" Height="100"/>
-            <TextBox Text="{Binding Num}" Margin="0 0 0 500" Width="100" Height="100"/>
+            
+            <Image Source="{Binding LastRecognisedFace}" Margin="230 0 0 500" Width="100" Height="100"/>
+            <Image Source="{Binding ExtractedFace}" Margin="0 0 230 500" Width="100" Height="100"/>
+
+            <TextBox Text="Extracted Face" BorderBrush="#74B9FF" BorderThickness="2" Background="Transparent" Foreground="#E0E0E0" FontSize="18" Margin="0 0 230 275" Width="160" Height="80" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+            <TextBox Text="Last Recognised Face" BorderBrush="#74B9FF" BorderThickness="2" Background="Transparent" Foreground="#E0E0E0" FontSize="18" Margin="230 0 0 275" Width="160" Height="80" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+
+            <TextBox Text="{Binding Label}" FontSize="24" BorderBrush="#74B9FF" BorderThickness="2" Background="Transparent" Foreground="#E0E0E0" Margin="53 0 0 120" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" HorizontalAlignment="Left" Width="300" Height="45"/>
+            <TextBox Text="{Binding Name}" FontSize="24" BorderBrush="#74B9FF" BorderThickness="2" Background="Transparent" Foreground="#E0E0E0" Margin="53 0 0 0" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" HorizontalAlignment="Left" Width="300" Height="45"/>
+            
+            <CheckBox Content="Frame Throttle" IsChecked="{Binding FrameThrottle}" FontSize="24" Foreground="#E0E0E0" Margin="53 120 0 0" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" HorizontalAlignment="Left" Width="300" Height="40"/>
+            <CheckBox Content="Enable Image Bloat" IsChecked="{Binding TrainBloat}" FontSize="24" Foreground="#E0E0E0" Margin="53 230 0 0" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" HorizontalAlignment="Left" Width="300" Height="45"/>
+
             <Button Command="{Binding EnableCameraCommand}" FontSize="28" Content="Enable Camera" Margin="0 660 230 0" Width="208" Height="48" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
             <Button Command="{Binding TrainCommand}" FontSize="28" Content="Train" Margin="230 660 0 0" Width="208" Height="48" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
         </Grid>
     </Grid>
 </UserControl>
+ 

@@ -56,14 +56,65 @@ namespace FacialRecognition.ViewModel
             }
         }
 
-        private int _num;
+        private ImageSource _lastRecognisedFace;
+        public ImageSource LastRecognisedFace
+        {
+            get => _lastRecognisedFace;
+            set
+            {
+                _lastRecognisedFace = value;
+                OnPropertyChanged(nameof(LastRecognisedFace));
+            }
+        }
+
+        private bool _trainBloat;
+        public bool TrainBloat
+        {
+            get => _trainBloat;
+            set
+            {
+                _trainBloat = value;
+                OnPropertyChanged(nameof(TrainBloat));
+            }
+        }
+
+        private bool _frameThrottle;
+        public bool FrameThrottle
+        {
+            get => _frameThrottle;
+            set
+            {
+                _frameThrottle = value;
+                OnPropertyChanged(nameof(FrameThrottle));
+            }
+        }
+
+        private string _label;
+        public string Label
+        {
+            get => "Label: " + _num;
+            set { }
+        }
+
+        private int _num = -1;
         public int Num
         {
             get => _num;
             set
             {
                 _num = value;
-                OnPropertyChanged(nameof(Num));
+                OnPropertyChanged(nameof(Label));
+            }
+        }
+
+        public string _name;
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                OnPropertyChanged(nameof(Name));
             }
         }
 
@@ -109,8 +160,21 @@ namespace FacialRecognition.ViewModel
 
                 // Draw results
                 DrawFaceResults(result, emguFrameImage, haarLocation);
+
+                if (Num != result.Label)
+                {
+                    if(PersonDatabase.Context.People.Any(y => y.Id == result.Label))
+                        PersonDatabase.Context.People.FirstOrDefault(x => x.Id == result.Label).RecognisedCounter++;
+
+                    LastRecognisedFace = haarExtract.ToBitmapSource();
+                }
+
                 Num = result.Label;
+                
             }
+
+            // Update PersonDatabase logs
+
 
             return new Tuple<Image<Bgr, byte>, Image<Gray, byte>>(emguFrameImage, haarExtract);
         }
@@ -122,6 +186,8 @@ namespace FacialRecognition.ViewModel
             {
                 var names = EigenFaceHandler.GetNames();
 
+                Name = names[Num];
+
                 // Draw Name text above the person
                 CvInvoke.PutText(frame, names[result.Label], new System.Drawing.Point(haarRectangle.X - 2, haarRectangle.Y - 2),
                     Emgu.CV.CvEnum.FontFace.HersheyComplex, 1.0, new Bgr(System.Drawing.Color.Purple).MCvScalar);
@@ -130,6 +196,7 @@ namespace FacialRecognition.ViewModel
             }
             else
             {
+                Name = "Unknown";
                 CvInvoke.PutText(frame, "Unknown", new System.Drawing.Point(haarRectangle.X - 2, haarRectangle.Y - 2),
                                     FontFace.HersheyComplex, 1.0, new Bgr(System.Drawing.Color.Orange).MCvScalar);
                 CvInvoke.Rectangle(frame, haarRectangle, new Bgr(System.Drawing.Color.Red).MCvScalar, 2);
