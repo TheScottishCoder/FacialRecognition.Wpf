@@ -9,7 +9,7 @@ using System.Windows.Media;
 
 namespace FacialRecognition.Model
 {
-    public class Image
+    public class FaceModel
     {
         private Image<Gray, byte> _face;
         public Image<Gray, byte> Face 
@@ -21,8 +21,6 @@ namespace FacialRecognition.Model
                 Source = _face.ToBitmapSource();
             }
         }
-        public int Row { get; set; }
-        public int Col { get; set; }
         public ImageSource Source { get; private set; }
     }
 }

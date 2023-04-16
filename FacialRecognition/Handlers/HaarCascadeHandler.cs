@@ -14,9 +14,12 @@ namespace FacialRecognition.Handlers
 {
     public class HaarCascadeHandler
     {
-        // Haar Cascade
-        private static CascadeClassifier _classifer;
+        // static CascadeClassifier Object
+        private static CascadeClassifier? _classifer;
 
+        /// <summary>
+        /// Check for valid CascadeClassifier or create one.
+        /// </summary>
         private static void CheckClassifer()
         {
             string faceCascadePath = Path.GetFullPath(@"data/haarcascades_frontalface_default.xml");
@@ -25,66 +28,57 @@ namespace FacialRecognition.Handlers
                 _classifer = new CascadeClassifier(faceCascadePath);
         }
 
-        public static Image<Bgr, byte> HaarCascadeFaceDetect(BitmapImage image)
-        {
-            CheckClassifer();
-
-            Image<Bgr, byte> img = ImageHandler.BitmapImageToEmguImage(image);
-            var imgGray = img.Convert<Gray, byte>();
-
-            // scaleFactor = Lower means more accurate results but longer processing times
-            Rectangle[] faces = _classifer.DetectMultiScale(imgGray, 1.1, 4);
-
-            foreach (var face in faces)
-            {
-                img.Draw(face, new Bgr(0, 0, 255), 2);
-            }
-
-            return img;
-        }
-
+        /// <summary>
+        /// Uses Haar's Cascade to detect and extract a face in an image. May return null.
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns>Emgu.CV Gray Image object.</returns>
         public static Image<Gray, byte> HaarCascadeFaceExtract(BitmapImage image)
         {
             CheckClassifer();
 
-            Image<Bgr, byte> img = ImageHandler.BitmapImageToEmguImage(image);
-            var imgGray = img.Convert<Gray, byte>();
+            // Convert to image to EmguImage and then converts to grey scale.         
+            Image<Gray,byte> imgGray = ImageHandler.BitmapImageToEmguImage(image)
+                .Convert<Gray, byte>();
 
+            // Use the classifier to detect faces
             // scaleFactor = Lower means more accurate results but longer processing times
             Rectangle[] faces = _classifer.DetectMultiScale(imgGray, 1.1, 4);
 
+            // Get's the largest recetangle
             Rectangle largestFace = faces.OrderByDescending(f => f.Size.Width * f.Size.Height).FirstOrDefault();
 
+            // Empty rectangles are often at 0,0
             if(largestFace.X == 0 && largestFace.Y == 0) { return null; }
 
+            // Resize image
             var faceImage = imgGray.Copy(largestFace);
             faceImage = ImageHandler.ResizeImage(faceImage);
             
             return faceImage;
         }
 
+        /// <summary>
+        /// Gets the rectangle object produced by HaarCascade containing the location of detected face
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns>System.Drawing.Rectangle object of the largest face</returns>
         public static Rectangle HaarCascadeFaceRectangle(BitmapImage image)
         {
             CheckClassifer();
 
-            Image<Bgr, byte> img = ImageHandler.BitmapImageToEmguImage(image);
-            var imgGray = img.Convert<Gray, byte>();
+            // Convert to image to EmguImage and then converts to grey scale.         
+            Image<Gray, byte> imgGray = ImageHandler.BitmapImageToEmguImage(image)
+                .Convert<Gray, byte>();
 
+            // Use the classifier to detect faces
             // scaleFactor = Lower means more accurate results but longer processing times
             Rectangle[] faces = _classifer.DetectMultiScale(imgGray, 1.1, 4);
 
+            // Get's the largest recetangle
             Rectangle largestFace = faces.OrderByDescending(f => f.Size.Width * f.Size.Height).FirstOrDefault();
 
             return largestFace;
-        }
-
-        private static Image<Gray, byte> ProcessImage(Image<Gray, byte> image)
-        {
-            image = ImageHandler.ResizeImage(image);
-            ImageHandler.NormalizeImage(image);
-            ImageHandler.EqualizeImage(image);
-
-            return image;
         }
     }
 }

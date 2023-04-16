@@ -9,6 +9,7 @@ namespace FacialRecognition.Wrappers
 {
     public class VideoCaptureWrapper
     {
+        // Static instance of EmguCV VideoCapture
         public static VideoCapture Instance { get; private set; } = new VideoCapture(0);
 
         //public VideoCaptureWrapper(int device = 0)

@@ -39,13 +39,15 @@
                 </ItemsControl.ItemTemplate>         
             </ItemsControl>
 
-            <!-- Elements -->
+            <!-- Border -->
             <Border Grid.ColumnSpan="3" Grid.RowSpan="2" BorderBrush="#74B9FF" BorderThickness="2"/>
 
+            <!-- Textboxes -->
             <TextBox Text="{Binding Name}" FontSize="32" Margin="0 0 0 64" Width="384" Height="64" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
             <TextBox Text="{Binding Group}" FontSize="32" Margin="0 128 0 0" Width="384" Height="64" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
             <TextBox Text="{Binding Timeout, Mode=TwoWay}" FontSize="32" Margin="0 320 0 0" Width="384" Height="64" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
 
+            <!-- Buttons -->
             <Button Command="{Binding ClearImagesCommand}" FontSize="32" Content="Clear Images" Margin="0 650 350 0" Width="224" Height="64" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
             <Button Command="{Binding AddPersonCommand}" FontSize="32" Content="Add Person" Margin="350 650 0 0" Width="224" Height="64" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
         </Grid>

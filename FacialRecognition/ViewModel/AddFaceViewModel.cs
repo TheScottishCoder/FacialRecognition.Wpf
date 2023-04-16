@@ -75,7 +75,7 @@ namespace FacialRecognition.ViewModel
         }
 
         // Binding list to data template
-        public ObservableCollection<Model.Image> Images { get; } = new ObservableCollection<Model.Image>();
+        public ObservableCollection<Model.FaceModel> Images { get; } = new ObservableCollection<Model.FaceModel>();
 
         // Commands
         public RelayCommand EnableCameraCommand { get; }
@@ -92,6 +92,7 @@ namespace FacialRecognition.ViewModel
         private int _row;
         private static int counter = 0;
 
+        // Inititate Commands with their functions and subscribe to event
         public AddFaceViewModel()
         {
             EnableCameraCommand = new RelayCommand(CameraEnabled);
@@ -102,12 +103,14 @@ namespace FacialRecognition.ViewModel
             VisibilityUpdate += VisibilityChange;
         }
 
+        // Enable the Camera
         private void CameraEnabled()
         {
             if (_canCapture == false)
             {
                 _canCapture = true;
                 VideoCaptureWrapper.Instance.Start();
+                // Start RenderFrame on a new thread.
                 Task.Run(() => RenderFrame());
             }
             else
@@ -117,10 +120,12 @@ namespace FacialRecognition.ViewModel
             }
         }
 
+        // Capture a frame and render it - Runs on it's own thread
         private async void RenderFrame()
         {
             while (_canCapture)
             {
+                // This will invoke the UI Updater to update the UI on a seperate thread once changes are made
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     CameraSource = CaptureFrame();
@@ -131,17 +136,20 @@ namespace FacialRecognition.ViewModel
             }
         }
 
+        // Capture a frame from the device
         private BitmapImage CaptureFrame()
         {
             var bi = new BitmapImage();
             Bitmap? image = null;
 
+            // Lock the instance since it's a static object. Any thread could be trying to access it.
             lock (VideoCaptureWrapper.Instance)
             {
+                // Capture the frame
                 image = VideoCaptureWrapper.Instance.QueryFrame()?.ToBitmap();
                 if (image != null)
                 {
-
+                    // Converts to BitmapImage from bitmap
                     var ms = new MemoryStream();
                     image.Save(ms, ImageFormat.Bmp);
 
@@ -157,18 +165,18 @@ namespace FacialRecognition.ViewModel
             return bi;
         }
 
-        // Add Gray Scale
+        // Command triggered by button to take an image
         private void TakeImage()
         {
             if (_canCapture)
             {
-                Image<Gray, Byte> img = ProcessImage(CaptureFrame());
+                Image<Gray, Byte> img = ExtractFaceFromImage(CaptureFrame());
 
                 if (img == null) { TakeImage(); }
                 else
                 {
 
-                    Images.Add(new Model.Image
+                    Images.Add(new Model.FaceModel
                     {
                         Face = img
                     });
@@ -176,14 +184,16 @@ namespace FacialRecognition.ViewModel
             }
         }
 
+        // Clear all images button
         private void ClearImages()
         {
             Images.Clear();
         }
 
+        // Add person to the Database context
         private void AddPerson()
         {
-            PersonStorage.Instance.AddPerson(new Person(
+            PersonDatabase.Context.AddPerson(new PersonModel(
                 //GenerateRandomID(),
                 counter++,
                 this.Name,
@@ -195,20 +205,6 @@ namespace FacialRecognition.ViewModel
             Cleanup();
         }
 
-        private long GenerateRandomID()
-        {
-            Random rnd = new Random();
-            long rndId = rnd.NextInt64();
-
-            if (CheckIdValid(rndId))
-                return rndId;
-            else
-                return GenerateRandomID();
-        }
-
-        private bool CheckIdValid(long num) =>
-            !PersonStorage.Instance.People.Any(x => x.Id == num);
-
         private void Cleanup()
         {
             Images.Clear();
@@ -217,13 +213,16 @@ namespace FacialRecognition.ViewModel
             Timeout = 5;
         }
 
+        // if the visibility event is triggered do some cleanup
+        // this needs further looking at
         private void VisibilityChange(object sender, EventArgs e)
         {
             _canCapture = false;
             VideoCaptureWrapper.Instance.Stop();
         }
 
-        private Image<Gray, byte> ProcessImage(BitmapImage img)
+        // Take an image, extract it, check it's not null and return it.
+        private Image<Gray, byte> ExtractFaceFromImage(BitmapImage img)
         {
             var processedImage = HaarCascadeHandler.HaarCascadeFaceExtract(img);
             if(processedImage == null) { return null; }

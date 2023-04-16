@@ -20,6 +20,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Xml.Linq;
+using static Emgu.CV.Face.FaceRecognizer;
 
 namespace FacialRecognition.ViewModel
 {
@@ -77,6 +78,7 @@ namespace FacialRecognition.ViewModel
         // Features
         private bool _canDetect = true;
 
+        // Inititate commands and subscribe to events
         public DetectFaceViewModel()
         {
             EnableCameraCommand = new RelayCommand(CameraEnabled);
@@ -85,56 +87,69 @@ namespace FacialRecognition.ViewModel
             VisibilityUpdate += VisibilityChange;
         }
 
+        // Bulk processing for Detection, Extraction and Drawing
         private Tuple<Image<Bgr, byte>, Image<Gray, byte>> Process()
         {
+            // Capture Frames, Extracted Face and Location. 
             var frame = CaptureFrame();
-            var haarResult = HaarCascadeHandler.HaarCascadeFaceDetect(frame);
             var haarExtract = HaarCascadeHandler.HaarCascadeFaceExtract(frame);
             var haarLocation = HaarCascadeHandler.HaarCascadeFaceRectangle(frame);
             var emguFrameImage = ImageHandler.BitmapImageToEmguImage(frame);
 
-            if(haarResult == null || haarExtract == null || (haarLocation.X == 0 && haarLocation.Y == 0)) { return null; }
+            // if anything is null stop
+            if(haarExtract == null || (haarLocation.X == 0 && haarLocation.Y == 0)) { return null; }
 
-            var faceImage = ImageHandler.BitmapImageToEmguImage(frame).Copy(haarLocation);
-
+            // if the recognizer is trained recognize images
             if (EigenFaceHandler.isTrained)
             {
-                var names = EigenFaceHandler.GetNames();
-                haarExtract = ImageHandler.NormalizeImage(ImageHandler.EqualizeImage(haarExtract));
+                haarExtract = ImageHandler.ProcessImage(haarExtract);
 
-                var result = EigenFaceHandler.recognizer.Predict(haarExtract);
+                // Predict and store results of recognition
+                PredictionResult result = EigenFaceHandler.recognizer.Predict(haarExtract);
 
+                // Draw results
+                DrawFaceResults(result, emguFrameImage, haarLocation);
                 Num = result.Label;
-
-                if(result.Label != -1 && result.Distance < 2000)
-                {
-
-                    CvInvoke.PutText(emguFrameImage, names[result.Label], new System.Drawing.Point(haarLocation.X - 2, haarLocation.Y - 2),
-                        Emgu.CV.CvEnum.FontFace.HersheyComplex, 1.0, new Bgr(System.Drawing.Color.Purple).MCvScalar);
-                    CvInvoke.Rectangle(emguFrameImage, haarLocation, new Bgr(System.Drawing.Color.Green).MCvScalar, 2);
-                }
-                else
-                {
-                    CvInvoke.PutText(emguFrameImage, "Unknown", new System.Drawing.Point(haarLocation.X - 2, haarLocation.Y - 2),
-                                        FontFace.HersheyComplex, 1.0, new Bgr(System.Drawing.Color.Orange).MCvScalar);
-                    CvInvoke.Rectangle(emguFrameImage, haarLocation, new Bgr(System.Drawing.Color.Red).MCvScalar, 2);
-                }
             }
 
             return new Tuple<Image<Bgr, byte>, Image<Gray, byte>>(emguFrameImage, haarExtract);
         }
 
+        // Uses System.Drawing library
+        private void DrawFaceResults(PredictionResult result, Image<Bgr, byte> frame, Rectangle haarRectangle)
+        {
+            if (result.Label != -1 && result.Distance < 2000)
+            {
+                var names = EigenFaceHandler.GetNames();
+
+                // Draw Name text above the person
+                CvInvoke.PutText(frame, names[result.Label], new System.Drawing.Point(haarRectangle.X - 2, haarRectangle.Y - 2),
+                    Emgu.CV.CvEnum.FontFace.HersheyComplex, 1.0, new Bgr(System.Drawing.Color.Purple).MCvScalar);
+                // Draw a rectangle around the person
+                CvInvoke.Rectangle(frame, haarRectangle, new Bgr(System.Drawing.Color.Green).MCvScalar, 2);
+            }
+            else
+            {
+                CvInvoke.PutText(frame, "Unknown", new System.Drawing.Point(haarRectangle.X - 2, haarRectangle.Y - 2),
+                                    FontFace.HersheyComplex, 1.0, new Bgr(System.Drawing.Color.Orange).MCvScalar);
+                CvInvoke.Rectangle(frame, haarRectangle, new Bgr(System.Drawing.Color.Red).MCvScalar, 2);
+            }
+        }
+
+        // Train the EigenFaceRecognizer
         private void Train()
         {
             EigenFaceHandler.Train();
         }
 
+        // Enable the camera
         private void CameraEnabled()
         {
             if (_canCapture == false)
             {
                 _canCapture = true;
                 VideoCaptureWrapper.Instance.Start();
+                // Start RenderFrame on a new thread.
                 Task.Run(() => RenderFrame());
             }
             else
@@ -144,25 +159,15 @@ namespace FacialRecognition.ViewModel
             }
         }
 
-        List<Tuple<int, double>> tuples = new List<Tuple<int, double>>();
+        
+        // Render a captured frame - Runs on a seperate thread.
         private async void RenderFrame()
         {
             while (_canCapture)
             {
+                // Invokes the UI to uppdate on a seperate thread
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    //CameraSource = HaarCascadeHandler.HaarCascadeFaceDetect(CaptureFrame()).ToBitmapSource();
-                    //if (EigenFaceHandler.isTrained)
-                    //{
-                    //    var result = EigenFaceHandler.recognizer.Predict(HaarCascadeHandler.HaarCascadeFaceExtract(CaptureFrame()));
-                    //    Console.WriteLine(result.Label + " : " + result.Distance);
-                    //    tuples.Add(new Tuple<int, double>(result.Label, result.Distance));
-                    //
-                    //    if(tuples.Count >= 1)
-                    //    {
-                    //        Console.WriteLine("");
-                    //    }
-                    //}
                     var img = Process();
 
                     if (img != null)
@@ -172,13 +177,13 @@ namespace FacialRecognition.ViewModel
                         if (img.Item2 != null)
                             ExtractedFace = img.Item2.ToBitmapSource();
                     }
-
                 });
 
-                await Task.Delay(10);
+                await Task.Delay(30);
             }
         }
 
+        // capture a frame
         private BitmapImage CaptureFrame()
         {
             var bi = new BitmapImage();
@@ -189,7 +194,7 @@ namespace FacialRecognition.ViewModel
                 image = VideoCaptureWrapper.Instance.QueryFrame()?.ToBitmap();
                 if (image != null)
                 {
-
+                    // Convert from BitmapImage to bitmap
                     var ms = new MemoryStream();
                     image.Save(ms, ImageFormat.Bmp);
 
@@ -205,56 +210,11 @@ namespace FacialRecognition.ViewModel
             return bi;
         }
 
-        private void Cleanup(object sender, EventArgs e)
-        {
-        }
-
+        // if visibility changes clean  some stuff
         private void VisibilityChange(object sender, EventArgs e)
         {
             _canCapture = false;
             //VideoCaptureWrapper.Instance.Stop();
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }
