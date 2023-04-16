@@ -163,10 +163,16 @@ namespace FacialRecognition.ViewModel
             if (_canCapture)
             {
                 Image<Gray, Byte> img = ProcessImage(CaptureFrame());
-                Images.Add(new Model.Image
+
+                if (img == null) { TakeImage(); }
+                else
                 {
-                    Face = img
-                });
+
+                    Images.Add(new Model.Image
+                    {
+                        Face = img
+                    });
+                }
             }
         }
 
@@ -220,6 +226,7 @@ namespace FacialRecognition.ViewModel
         private Image<Gray, byte> ProcessImage(BitmapImage img)
         {
             var processedImage = HaarCascadeHandler.HaarCascadeFaceExtract(img);
+            if(processedImage == null) { return null; }
 
             return processedImage;
         }

@@ -49,5 +49,20 @@ namespace FacialRecognition.Handlers
             return BitmapToEmguImage(img);
         }
 
+        public static Image<Gray, byte> ResizeImage(Image<Gray, byte> faceImage, int sizeX = 100, int sizeY = 100) =>
+            faceImage.Resize(sizeX, sizeY, Emgu.CV.CvEnum.Inter.Cubic);
+
+        public static Image<Gray, byte> NormalizeImage(Image<Gray, byte> faceImage)
+        {
+            CvInvoke.Normalize(faceImage, faceImage, 0, 255, Emgu.CV.CvEnum.NormType.MinMax);
+            return faceImage;
+        }
+
+        public static Image<Gray, byte> EqualizeImage(Image<Gray, byte> faceImage)
+        {
+            CvInvoke.EqualizeHist(faceImage, faceImage);
+            return faceImage;
+        }
+
     }
 }

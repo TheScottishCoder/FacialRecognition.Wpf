@@ -55,11 +55,11 @@ namespace FacialRecognition.Handlers
 
             Rectangle largestFace = faces.OrderByDescending(f => f.Size.Width * f.Size.Height).FirstOrDefault();
 
-            var faceImage = imgGray.Copy(largestFace);
-            faceImage = faceImage.Resize(100, 100, Emgu.CV.CvEnum.Inter.Cubic);
-            CvInvoke.Normalize(faceImage, faceImage, 0, 255, Emgu.CV.CvEnum.NormType.MinMax);
-            CvInvoke.EqualizeHist(faceImage, faceImage);
+            if(largestFace.X == 0 && largestFace.Y == 0) { return null; }
 
+            var faceImage = imgGray.Copy(largestFace);
+            faceImage = ImageHandler.ResizeImage(faceImage);
+            
             return faceImage;
         }
 
@@ -76,6 +76,15 @@ namespace FacialRecognition.Handlers
             Rectangle largestFace = faces.OrderByDescending(f => f.Size.Width * f.Size.Height).FirstOrDefault();
 
             return largestFace;
+        }
+
+        private static Image<Gray, byte> ProcessImage(Image<Gray, byte> image)
+        {
+            image = ImageHandler.ResizeImage(image);
+            ImageHandler.NormalizeImage(image);
+            ImageHandler.EqualizeImage(image);
+
+            return image;
         }
     }
 }
