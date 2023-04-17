@@ -31,14 +31,17 @@
             <TextBox Text="Extracted Face" BorderBrush="#74B9FF" BorderThickness="2" Background="Transparent" Foreground="#E0E0E0" FontSize="18" Margin="0 0 230 275" Width="160" Height="80" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
             <TextBox Text="Last Recognised Face" BorderBrush="#74B9FF" BorderThickness="2" Background="Transparent" Foreground="#E0E0E0" FontSize="18" Margin="230 0 0 275" Width="160" Height="80" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
 
-            <TextBox Text="{Binding Label}" FontSize="24" BorderBrush="#74B9FF" BorderThickness="2" Background="Transparent" Foreground="#E0E0E0" Margin="53 0 0 120" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" HorizontalAlignment="Left" Width="300" Height="45"/>
-            <TextBox Text="{Binding Name}" FontSize="24" BorderBrush="#74B9FF" BorderThickness="2" Background="Transparent" Foreground="#E0E0E0" Margin="53 0 0 0" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" HorizontalAlignment="Left" Width="300" Height="45"/>
+            <TextBox Text="{Binding Label}" IsReadOnly="True" FontSize="24" BorderBrush="#74B9FF" BorderThickness="2" Background="Transparent" Foreground="#E0E0E0" Margin="53 0 0 120" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" HorizontalAlignment="Left" Width="300" Height="45"/>
+            <TextBox Text="{Binding Name}" IsReadOnly="True" FontSize="24" BorderBrush="#74B9FF" BorderThickness="2" Background="Transparent" Foreground="#E0E0E0" Margin="53 0 0 0" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" HorizontalAlignment="Left" Width="300" Height="45"/>
+            <TextBox Text="{Binding GroupTrainSearch}" FontSize="24" BorderBrush="#74B9FF" BorderThickness="2" Background="Transparent" Foreground="#E0E0E0" Margin="53 460 0 0" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" HorizontalAlignment="Left" Width="300" Height="45"/>
             
             <CheckBox Content="Frame Throttle" IsChecked="{Binding FrameThrottle}" FontSize="24" Foreground="#E0E0E0" Margin="53 120 0 0" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" HorizontalAlignment="Left" Width="300" Height="40"/>
             <CheckBox Content="Enable Image Bloat" IsChecked="{Binding TrainBloat}" FontSize="24" Foreground="#E0E0E0" Margin="53 230 0 0" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" HorizontalAlignment="Left" Width="300" Height="45"/>
+            <CheckBox Content="Enable Class Train" IsChecked="{Binding GroupTrain}" FontSize="24" Foreground="#E0E0E0" Margin="53 340 0 0" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" HorizontalAlignment="Left" Width="300" Height="45"/>
 
             <Button Command="{Binding EnableCameraCommand}" FontSize="28" Content="Enable Camera" Margin="0 660 230 0" Width="208" Height="48" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
             <Button Command="{Binding TrainCommand}" FontSize="28" Content="Train" Margin="230 660 0 0" Width="208" Height="48" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
+            <Button Command="{Binding GoCommand}" FontSize="28" Content="Go" Margin="0 460 30 0" Width="80" Height="48" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" HorizontalAlignment="Right" VerticalAlignment="Center" Background="Transparent" BorderThickness="2" BorderBrush="#6C5CE7" Foreground="#E0E0E0"/>
         </Grid>
     </Grid>
 </UserControl>

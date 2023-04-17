@@ -40,65 +40,22 @@ namespace FacialRecognition.Handlers
         /// <returns>A List of Strings</returns>
         public static List<string> GetNames() => _names;
 
+
         /// <summary>
         /// Get's the list of labels
         /// </summary>
         /// <returns>A list of integers</returns>
         public static List<int> GetLabels() => _personsLabels;
 
+
         /// <summary>
         /// Trains the EigenFaceRecognizer with PersonStorage images.
         /// </summary>
-        public static void Train()
+        public static void Train(List<PersonModel> people, bool bloat)
         {
-            _faces.Clear();
-            _personsLabels.Clear();
-            _names.Clear();
+            Reset();
 
-            IReadOnlyList<PersonModel> people = PersonDatabase.Context.People;
-            int label = 0;
-
-            // Loop each person in people list
-            foreach (PersonModel person in people)
-            {
-                string name = person.Name;
-                long id = person.Id;
-                _names.Add(name);
-
-                foreach (var img in person.Images)
-                {
-                    // Add different versions of the face image to the list
-                    _faces.Add(img.Face);
-                    _faces.Add(ImageHandler.NormalizeImage(img.Face));
-                    _faces.Add(ImageHandler.EqualizeImage(img.Face));
-                    _faces.Add(ImageHandler.GaussianBlurImage(img.Face));
-                    _faces.Add(ImageHandler.ProcessImage(img.Face));
-
-                    // Clean this up
-                    _personsLabels.Add(label);
-                    _personsLabels.Add(label);
-                    _personsLabels.Add(label);
-                    _personsLabels.Add(label);
-                    _personsLabels.Add(label);
-                    _imageCount++;
-                    _imageCount++;
-                    _imageCount++;
-                    _imageCount++;
-                    _imageCount++;
-                }
-
-                label++;
-            }
-
-            // create the output directory if it does not exist
-            Directory.CreateDirectory("output");
-
-            // loop through each image in _faces and save it to the output directory
-            for (int i = 0; i < _faces.Count; i++)
-            {
-                string filename = Path.Combine("output", $"face_{i}.jpg");
-                CvInvoke.Imwrite(filename, _faces[i]);
-            }
+            ManagePeople(people, bloat);
 
             // if there is faces train
             if (_faces.Count > 0)
@@ -121,6 +78,57 @@ namespace FacialRecognition.Handlers
 
                 isTrained = true;
             }
+        }
+
+        private static void Reset()
+        {
+            isTrained = false;
+            _imageCount = 0;
+            _faces.Clear();
+            _personsLabels.Clear();
+            _names.Clear();
+        }
+
+        public static int ManagePeople(List<PersonModel> people, bool bloat)
+        {
+            int label = 0;
+
+            // Loop each person in people list
+            foreach (PersonModel person in people)
+            {
+                string name = person.Name;
+                long id = person.Id;
+                _names.Add(name);
+
+                foreach (var img in person.Images)
+                {
+                    // Allways add image with full pre-processing
+                    _faces.Add(ImageHandler.ProcessImage(img.Face));
+
+                    // if bloat is true, generate extra training images (No effect, Normalized, Equalized, GaussianBlur) 
+                    // Bloat Example; input Images = 3(1) -> bloat -> Result = 15(5) (3x Full processing, 3x Normalize, 3x Equalize, 3x Gaussian, 3x No Effect)
+                    if (bloat)
+                    {
+                        _faces.Add(img.Face);
+                        _faces.Add(ImageHandler.NormalizeImage(img.Face));
+                        _faces.Add(ImageHandler.EqualizeImage(img.Face, 2));
+                        _faces.Add(ImageHandler.GaussianBlurImage(img.Face, new System.Drawing.Size(5, 5)));
+
+                        for (int i = 0; i <= 3; i++)
+                        {
+                            _personsLabels.Add(label);
+                            _imageCount++;
+                        }
+                    }
+
+                    _personsLabels.Add(label);
+                    _imageCount++;
+                }
+
+                label++;
+            }
+
+            return label;
         }
     }
 }

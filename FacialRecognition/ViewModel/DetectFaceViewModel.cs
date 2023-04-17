@@ -4,6 +4,7 @@ using Emgu.CV.Face;
 using Emgu.CV.Structure;
 using FacialRecognition.Handlers;
 using FacialRecognition.Helper;
+using FacialRecognition.Model;
 using FacialRecognition.Wrappers;
 using System;
 using System.Collections.Generic;
@@ -27,11 +28,11 @@ namespace FacialRecognition.ViewModel
     public class DetectFaceViewModel : INotifyPropertyChanged
     {
         // INotifyPropertyChanged Event handler
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         // Visibility EventHandler
-        public static EventHandler VisibilityUpdate;
+        public static EventHandler? VisibilityUpdate;
 
         // Binding
         private ImageSource _cameraSource;
@@ -78,7 +79,7 @@ namespace FacialRecognition.ViewModel
             }
         }
 
-        private bool _frameThrottle;
+        private bool _frameThrottle = true;
         public bool FrameThrottle
         {
             get => _frameThrottle;
@@ -86,6 +87,28 @@ namespace FacialRecognition.ViewModel
             {
                 _frameThrottle = value;
                 OnPropertyChanged(nameof(FrameThrottle));
+            }
+        }
+
+        private bool _groupTrain = false;
+        public bool GroupTrain
+        {
+            get => _groupTrain;
+            set
+            {
+                _groupTrain = value;
+                OnPropertyChanged(nameof(GroupTrain));
+            }
+        }
+
+        private string _groupTrainSearch;
+        public string GroupTrainSearch
+        {
+            get => _groupTrainSearch;
+            set
+            {
+                _groupTrainSearch = value;
+                OnPropertyChanged(nameof(GroupTrainSearch));
             }
         }
 
@@ -121,21 +144,24 @@ namespace FacialRecognition.ViewModel
         // Commands
         public RelayCommand EnableCameraCommand { get; }
         public RelayCommand TrainCommand { get; }
+        public RelayCommand GoCommand { get; }
 
         // Camera
         private volatile bool _canCapture = false;
-        private int _cameraDevice = 0;
-
-        // Features
-        private bool _canDetect = true;
 
         // Inititate commands and subscribe to events
         public DetectFaceViewModel()
         {
             EnableCameraCommand = new RelayCommand(CameraEnabled);
             TrainCommand = new RelayCommand(Train);
+            GoCommand = new RelayCommand(Go);
 
             VisibilityUpdate += VisibilityChange;
+        }
+
+        private void Go()
+        {
+
         }
 
         // Bulk processing for Detection, Extraction and Drawing
@@ -158,8 +184,6 @@ namespace FacialRecognition.ViewModel
                 // Predict and store results of recognition
                 PredictionResult result = EigenFaceHandler.recognizer.Predict(haarExtract);
 
-                // Draw results
-                DrawFaceResults(result, emguFrameImage, haarLocation);
 
                 if (Num != result.Label)
                 {
@@ -171,6 +195,8 @@ namespace FacialRecognition.ViewModel
 
                 Num = result.Label;
                 
+                // Draw results
+                DrawFaceResults(result, emguFrameImage, haarLocation);
             }
 
             // Update PersonDatabase logs
@@ -184,7 +210,7 @@ namespace FacialRecognition.ViewModel
         {
             if (result.Label != -1 && result.Distance < 2000)
             {
-                var names = EigenFaceHandler.GetNames();
+                List<string> names = EigenFaceHandler.GetNames();
 
                 Name = names[Num];
 
@@ -206,7 +232,23 @@ namespace FacialRecognition.ViewModel
         // Train the EigenFaceRecognizer
         private void Train()
         {
-            EigenFaceHandler.Train();
+            IReadOnlyList<PersonModel> personModels = PersonDatabase.Context.People;
+            List<PersonModel> models = new List<PersonModel>();
+
+
+            if (GroupTrain)
+            {
+                
+            }
+            else
+            {
+                foreach (var p in PersonDatabase.Context.People)
+                {
+                    models.Add(p);
+                }
+
+                EigenFaceHandler.Train(models, TrainBloat);
+            }
         }
 
         // Enable the camera
@@ -225,7 +267,6 @@ namespace FacialRecognition.ViewModel
                 //VideoCaptureWrapper.Instance.Stop();
             }
         }
-
         
         // Render a captured frame - Runs on a seperate thread.
         private async void RenderFrame()
@@ -246,7 +287,8 @@ namespace FacialRecognition.ViewModel
                     }
                 });
 
-                await Task.Delay(30);
+                if(FrameThrottle)
+                    await Task.Delay(30);
             }
         }
 

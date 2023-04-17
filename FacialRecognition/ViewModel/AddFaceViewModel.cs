@@ -23,11 +23,11 @@ namespace FacialRecognition.ViewModel
     public class AddFaceViewModel : INotifyPropertyChanged
     {
         // INotifyPropertyChanged Event Handlers
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         // Visibility Change
-        public static EventHandler VisibilityUpdate;
+        public static EventHandler? VisibilityUpdate;
 
         // Binding
         private BitmapImage _cameraSource;

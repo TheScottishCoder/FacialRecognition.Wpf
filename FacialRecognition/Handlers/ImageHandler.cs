@@ -88,9 +88,10 @@ namespace FacialRecognition.Handlers
         /// </summary>
         /// <param name="faceImage"></param>
         /// <returns>Emgu.CV Image object</returns>
-        public static Image<Gray, byte> EqualizeImage(Image<Gray, byte> faceImage)
+        public static Image<Gray, byte> EqualizeImage(Image<Gray, byte> faceImage, int intensity)
         {
-            CvInvoke.EqualizeHist(faceImage, faceImage);
+            for(int i = 0; i < intensity; i++)
+                CvInvoke.EqualizeHist(faceImage, faceImage);
             return faceImage;
         }
 
@@ -99,9 +100,9 @@ namespace FacialRecognition.Handlers
         /// </summary>
         /// <param name="faceImage"></param>
         /// <returns>Emgu.CV Image object</returns>
-        public static Image<Gray, byte> GaussianBlurImage(Image<Gray, byte> faceImage)
+        public static Image<Gray, byte> GaussianBlurImage(Image<Gray, byte> faceImage, Size size)
         {
-            CvInvoke.GaussianBlur(faceImage, faceImage, new Size(3, 3), 0);
+            CvInvoke.GaussianBlur(faceImage, faceImage, size, 0);
             return faceImage;
         }
 
@@ -114,8 +115,8 @@ namespace FacialRecognition.Handlers
         {
             image = ImageHandler.ResizeImage(image);
             image = ImageHandler.NormalizeImage(image);
-            image = ImageHandler.EqualizeImage(image);
-            image = ImageHandler.GaussianBlurImage(image);
+            image = ImageHandler.EqualizeImage(image, 2);
+            //image = ImageHandler.GaussianBlurImage(image);
 
             return image;
         }
