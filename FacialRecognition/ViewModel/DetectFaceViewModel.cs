@@ -1,4 +1,5 @@
-﻿using Emgu.CV;
+﻿using Accord;
+using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Face;
 using Emgu.CV.Structure;
@@ -90,25 +91,25 @@ namespace FacialRecognition.ViewModel
             }
         }
 
-        private bool _groupTrain = false;
-        public bool GroupTrain
+        private bool _evaluate = false;
+        public bool Evaluate
         {
-            get => _groupTrain;
+            get => _evaluate;
             set
             {
-                _groupTrain = value;
-                OnPropertyChanged(nameof(GroupTrain));
+                _evaluate = value;
+                OnPropertyChanged(nameof(Evaluate));
             }
         }
 
-        private string _groupTrainSearch;
-        public string GroupTrainSearch
+        private string _evaluatePerson;
+        public string EvaluatePerson
         {
-            get => _groupTrainSearch;
+            get => _evaluatePerson;
             set
             {
-                _groupTrainSearch = value;
-                OnPropertyChanged(nameof(GroupTrainSearch));
+                _evaluatePerson = value;
+                OnPropertyChanged(nameof(EvaluatePerson));
             }
         }
 
@@ -141,6 +142,15 @@ namespace FacialRecognition.ViewModel
             }
         }
 
+        // Eval stuff
+        private int[,] confusionMatrix;
+        private int numClasses;
+        bool doEval = false;
+        double overallResultAccuracy = 0;
+        double overallAttemptAccuracy = 0;
+        int predictionAttempts = 0;
+        int timesPredicted = 0;
+
         // Commands
         public RelayCommand EnableCameraCommand { get; }
         public RelayCommand TrainCommand { get; }
@@ -155,23 +165,36 @@ namespace FacialRecognition.ViewModel
             EnableCameraCommand = new RelayCommand(CameraEnabled);
             TrainCommand = new RelayCommand(Train);
             GoCommand = new RelayCommand(Go);
-
             VisibilityUpdate += VisibilityChange;
         }
 
         private void Go()
         {
+            if (confusionMatrix == null)
+            {
+                
+            }
 
+            CalculateAccuracy();
         }
 
         // Bulk processing for Detection, Extraction and Drawing
-        private Tuple<Image<Bgr, byte>, Image<Gray, byte>> Process()
+        private Tuple<Image<Bgr, byte>, Image<Gray, byte>, PredictionResult> Process(bool eval = true)
         {
+            // Eval stats
+            int truePositives = 0;
+            int falsePositives = 0;
+
+            int trueNegatives = 0;
+            int falseNegatives = 0;
+
             // Capture Frames, Extracted Face and Location. 
             var frame = CaptureFrame();
             var haarExtract = HaarCascadeHandler.HaarCascadeFaceExtract(frame);
             var haarLocation = HaarCascadeHandler.HaarCascadeFaceRectangle(frame);
             var emguFrameImage = ImageHandler.BitmapImageToEmguImage(frame);
+
+            PredictionResult result = default;
 
             // if anything is null stop
             if(haarExtract == null || (haarLocation.X == 0 && haarLocation.Y == 0)) { return null; }
@@ -182,7 +205,7 @@ namespace FacialRecognition.ViewModel
                 haarExtract = ImageHandler.ProcessImage(haarExtract);
 
                 // Predict and store results of recognition
-                PredictionResult result = EigenFaceHandler.recognizer.Predict(haarExtract);
+                result = EigenFaceHandler.recognizer.Predict(haarExtract);
 
 
                 if (Num != result.Label)
@@ -202,7 +225,7 @@ namespace FacialRecognition.ViewModel
             // Update PersonDatabase logs
 
 
-            return new Tuple<Image<Bgr, byte>, Image<Gray, byte>>(emguFrameImage, haarExtract);
+            return new Tuple<Image<Bgr, byte>, Image<Gray, byte>, PredictionResult>(emguFrameImage, haarExtract, result);
         }
 
         // Uses System.Drawing library
@@ -236,19 +259,16 @@ namespace FacialRecognition.ViewModel
             List<PersonModel> models = new List<PersonModel>();
 
 
-            if (GroupTrain)
-            {
-                
-            }
-            else
-            {
+
                 foreach (var p in PersonDatabase.Context.People)
                 {
                     models.Add(p);
                 }
 
                 EigenFaceHandler.Train(models, TrainBloat);
-            }
+
+            numClasses = PersonDatabase.Context.People.Count;
+            confusionMatrix = new int[numClasses, numClasses];
         }
 
         // Enable the camera
@@ -267,7 +287,7 @@ namespace FacialRecognition.ViewModel
                 //VideoCaptureWrapper.Instance.Stop();
             }
         }
-        
+
         // Render a captured frame - Runs on a seperate thread.
         private async void RenderFrame()
         {
@@ -276,7 +296,18 @@ namespace FacialRecognition.ViewModel
                 // Invokes the UI to uppdate on a seperate thread
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    var img = Process();
+                    Tuple<Image<Bgr, byte>, Image<Gray, byte>, PredictionResult> img = null;
+
+                    if (Evaluate == false)
+                    {
+                        img = Process();                        
+                    }
+                    else if(Evaluate == true)
+                    {          
+                        img = Process();
+
+                        Evaluation(img);
+                    }
 
                     if (img != null)
                     {
@@ -287,13 +318,74 @@ namespace FacialRecognition.ViewModel
                     }
                 });
 
-                if(FrameThrottle)
+                if (FrameThrottle)
+                    await Task.Delay(200);
+                else
                     await Task.Delay(30);
             }
         }
 
-        // capture a frame
-        private BitmapImage CaptureFrame()
+        private void Evaluation(Tuple<Image<Bgr, byte>, Image<Gray, byte>, PredictionResult> img)
+        {
+            if (img == null)
+            {
+                return;
+            }
+
+            if (img.Item3.Label == -1)
+            {
+                predictionAttempts++;
+                return;
+            }
+
+            if (EvaluatePerson == null) return;
+
+            confusionMatrix[EigenFaceHandler.GetLabelFromPersonName(EvaluatePerson), img.Item3.Label]++;
+            timesPredicted++;
+        }
+
+        private void CalculateAccuracy()
+        {
+            int correctPredictions = 0;
+            int totalPredictions = 0;
+
+            for (int i = 0; i < numClasses; i++)
+            {
+                for (int j = 0; j < numClasses; j++)
+                {
+                    totalPredictions += confusionMatrix[i, j];
+                    if (i == j)
+                    {
+                        correctPredictions += confusionMatrix[i, j];
+                    }
+                }
+            }
+
+            overallResultAccuracy = (double)correctPredictions / totalPredictions;
+            overallAttemptAccuracy = (double)timesPredicted / predictionAttempts;
+
+            List<double> data = new List<double>() { (double)totalPredictions , (double)correctPredictions, (double)predictionAttempts,
+                (double)timesPredicted, overallResultAccuracy, overallAttemptAccuracy
+            };
+            List<string> tags = new List<string>() { "Total Predictions", "Correct Predictions", "Prediction Attempts",
+                "Times Predicted", "Overall Result Accuracy", "overallAttemptAccuracy" };
+
+            WriteDataToFile(data, tags, $"output{EvaluatePerson}.txt");
+        }
+
+        public static void WriteDataToFile(List<double> data, List<string> tags, string fileName)
+        {
+            using (StreamWriter outputFile = new StreamWriter(fileName))
+            {
+                for (int i = 0; i < data.Count; i++)
+                {
+                    outputFile.WriteLine($"{tags[i]}: {data[i]}");
+                }
+            }
+        }
+
+            // capture a frame
+            private BitmapImage CaptureFrame()
         {
             var bi = new BitmapImage();
             Bitmap? image = null;

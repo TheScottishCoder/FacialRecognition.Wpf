@@ -115,7 +115,7 @@ namespace FacialRecognition.Handlers
         {
             image = ImageHandler.ResizeImage(image);
             image = ImageHandler.NormalizeImage(image);
-            image = ImageHandler.EqualizeImage(image, 2);
+            image = ImageHandler.EqualizeImage(image, 1);
             //image = ImageHandler.GaussianBlurImage(image);
 
             return image;

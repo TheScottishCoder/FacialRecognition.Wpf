@@ -55,7 +55,8 @@ namespace FacialRecognition.Handlers
         {
             Reset();
 
-            ManagePeople(people, bloat);
+            Preprocess(people, bloat);
+
 
             // if there is faces train
             if (_faces.Count > 0)
@@ -89,7 +90,7 @@ namespace FacialRecognition.Handlers
             _names.Clear();
         }
 
-        public static int ManagePeople(List<PersonModel> people, bool bloat)
+        public static int Preprocess(List<PersonModel> people, bool bloat)
         {
             int label = 0;
 
@@ -106,15 +107,16 @@ namespace FacialRecognition.Handlers
                     _faces.Add(ImageHandler.ProcessImage(img.Face));
 
                     // if bloat is true, generate extra training images (No effect, Normalized, Equalized, GaussianBlur) 
-                    // Bloat Example; input Images = 3(1) -> bloat -> Result = 15(5) (3x Full processing, 3x Normalize, 3x Equalize, 3x Gaussian, 3x No Effect)
+                    // Bloat Example; input Images = 3(1) -> bloat -> Result = 18(6) (3x Full processing, 3x Normalize, 3x Equalize, 3x Gaussian, 3x No Effect)
                     if (bloat)
                     {
                         _faces.Add(img.Face);
                         _faces.Add(ImageHandler.NormalizeImage(img.Face));
+                        _faces.Add(ImageHandler.EqualizeImage(img.Face, 1));
                         _faces.Add(ImageHandler.EqualizeImage(img.Face, 2));
-                        _faces.Add(ImageHandler.GaussianBlurImage(img.Face, new System.Drawing.Size(5, 5)));
+                        _faces.Add(ImageHandler.GaussianBlurImage(img.Face, new System.Drawing.Size(3, 3)));
 
-                        for (int i = 0; i <= 3; i++)
+                        for (int i = 0; i <= 4; i++)
                         {
                             _personsLabels.Add(label);
                             _imageCount++;
@@ -127,6 +129,13 @@ namespace FacialRecognition.Handlers
 
                 label++;
             }
+
+            return label;
+        }
+
+        public static int GetLabelFromPersonName(string personName)
+        {
+            int label = _names.IndexOf(personName);
 
             return label;
         }
